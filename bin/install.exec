@@ -1,6 +1,8 @@
 #!/bin/bash
 if [[ TARGET_INSTALL_REMOTE -eq 1 ]]; then
 	exec ssh -p $THEOS_DEVICE_PORT $THEOS_DEVICE_USER@$THEOS_DEVICE_IP "$@"
+elif [[ TARGET_INSTALL_SIMULATOR -eq 1 ]]; then
+	exec xcrun simctl spawn booted $@
 else
 	exec sh -c "$@"
 fi
