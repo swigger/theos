@@ -5,5 +5,6 @@ THEOS_PLATFORM_NAME := linux
 _THEOS_PLATFORM_DEFAULT_TARGET := iphone
 _THEOS_PLATFORM_DU_EXCLUDE := --exclude
 _THEOS_PLATFORM_MD5SUM := md5sum
+_THEOS_PLATFORM_LIPO = $(THEOS)/toolchain/linux/iphone/bin/armv7-apple-darwin11-lipo
 _THEOS_PLATFORM_SHOW_IN_FILE_MANAGER := nautilus
 endif
