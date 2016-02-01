@@ -64,7 +64,7 @@ else # } < 6.0 {
 	ARCHS ?= armv6 armv7
 endif # }
 
-SDKFLAGS := -isysroot "$(SYSROOT)" $(foreach ARCH,$(ARCHS),-arch $(ARCH)) -miphoneos-version-min=$(_THEOS_TARGET_IPHONEOS_DEPLOYMENT_VERSION)
+SDKFLAGS := -isysroot "$(SYSROOT)" -D__IPHONE_OS_VERSION_MIN_REQUIRED=__IPHONE_$(subst .,_,$(_THEOS_TARGET_IPHONEOS_DEPLOYMENT_VERSION)) -miphoneos-version-min=$(_THEOS_TARGET_IPHONEOS_DEPLOYMENT_VERSION)
 
 # “iOS 9 changed the 32-bit pagesize on 64-bit CPUs from 4096 bytes to 16384:
 # all 32-bit binaries must now be compiled with -Wl,-segalign,4000.”
