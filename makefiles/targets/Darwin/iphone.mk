@@ -9,7 +9,6 @@ ifeq ($(__THEOS_TARGET_ARG_1),clang)
 _THEOS_TARGET_ARG_ORDER := 2 3
 else ifeq ($(__THEOS_TARGET_ARG_1),gcc)
 _THEOS_TARGET_ARG_ORDER := 2 3
-endif
 
 # A version specified as a target argument overrides all previous definitions.
 _SDKVERSION := $(or $(__THEOS_TARGET_ARG_$(word 1,$(_THEOS_TARGET_ARG_ORDER))),$(SDKVERSION_$(THEOS_CURRENT_ARCH)),$(SDKVERSION))
