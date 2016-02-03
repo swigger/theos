@@ -20,9 +20,6 @@ _SDK_DIR := $(THEOS_PLATFORM_SDK_ROOT)/Platforms/iPhoneOS.platform/Developer/SDK
 _IOS_SDKS := $(sort $(patsubst $(_SDK_DIR)/iPhoneOS%.sdk,%,$(wildcard $(_SDK_DIR)/iPhoneOS*.sdk)))
 
 ifeq ($(words $(_IOS_SDKS)),0)
-$(error You do not have an SDK in $(_SDK_DIR))
-endif
-ifeq ($(words $(_IOS_SDKS)),0)
 before-all::
 	@$(PRINT_FORMAT_ERROR) "You do not have an SDK in $(_SDK_DIR)." >&2
 endif

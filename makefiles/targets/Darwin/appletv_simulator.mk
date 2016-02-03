@@ -14,7 +14,12 @@ _THEOS_TARGET_INCLUDE_SDK_VERSION := $(or $(INCLUDE_SDKVERSION),latest)
 
 _SDK_DIR := $(THEOS_PLATFORM_SDK_ROOT)/Platforms/AppleTVSimulator.platform/Developer/SDKs
 _IOS_SDKS := $(sort $(patsubst $(_SDK_DIR)/AppleTVSimulator%.sdk,%,$(wildcard $(_SDK_DIR)/AppleTVSimulator*.sdk)))
-_LATEST_SDK := $(word $(words $(_IOS_SDKS)),$(_IOS_SDKS))
+
+ifeq ($(words $(_IOS_SDKS)),0)
+before-all::
+	@$(PRINT_FORMAT_ERROR) "You do not have an SDK in $(_SDK_DIR)." >&2
+endif
+_LATEST_SDK := $(lastword $(_IOS_SDKS))
 
 ifeq ($(_THEOS_TARGET_SDK_VERSION),latest)
 override _THEOS_TARGET_SDK_VERSION := $(_LATEST_SDK)
