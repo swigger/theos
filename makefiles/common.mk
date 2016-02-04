@@ -109,6 +109,12 @@ ifeq ($(uname_s)-$(uname_p),Darwin-arm64)
 uname_p = arm
 endif
 
+ifeq ($(findstring MSYS_NT,$(uname_s)),  MSYS_NT)
+uname_s := Linux
+uname_p := x86_64
+uname_o := Linux
+endif
+
 export _THEOS_PLATFORM_ARCH = $(uname_s)-$(uname_p)
 export _THEOS_PLATFORM = $(uname_s)
 export _THEOS_OS = $(uname_o)
