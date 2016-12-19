@@ -1,6 +1,7 @@
-# Theos
-**Unified cross-platform Makefile system.**
+# Theos: *Unified cross-platform Makefile system.*
+
+[![Travis Status](https://travis-ci.org/theos/theos.svg)](https://travis-ci.org/theos/theos)
+
+Please note: Theos has undergone a number of changes recently. To learn more, visit [**the wiki**](https://github.com/theos/theos/wiki).
 
 See [LICENSE.md](LICENSE.md) for licensing information.
-
-To learn more, including how to install or switch to this fork of Theos, visit [**the wiki**](https://github.com/kirb/theos/wiki).

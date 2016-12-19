@@ -19,8 +19,19 @@ do:: all package install
 
 before-all::
 ifneq ($(SYSROOT),)
-	@[ -d "$(SYSROOT)" ] || { $(PRINT_FORMAT_ERROR) "Your current SYSROOT, \"$(SYSROOT)\", appears to be missing." >&2; exit 1; }
+	@if [[ ! -d "$(SYSROOT)" ]]; then \
+		$(PRINT_FORMAT_ERROR) "Your current SYSROOT, “$(SYSROOT)”, appears to be missing." >&2; \
+		exit 1; \
+	fi
 endif
+	@if [[ ! -f "$(THEOS_VENDOR_INCLUDE_PATH)/.git" || ! -f "$(THEOS_VENDOR_LIBRARY_PATH)/.git" ]]; then \
+		$(PRINT_FORMAT_ERROR) "The vendor/include and/or vendor/lib directories are missing. Please run \`git submodule update --init --recursive\` in your Theos directory. More information: https://github.com/theos/theos/wiki/Installation." >&2; \
+		exit 1; \
+	fi
+	@if [[ -d "$(THEOS_LEGACY_PACKAGE_DIR)" && ! -d "$(THEOS_PACKAGE_DIR)" ]]; then \
+		$(PRINT_FORMAT) "The \"debs\" directory has been renamed to \"packages\". Moving it." >&2; \
+		mv "$(THEOS_LEGACY_PACKAGE_DIR)" "$(THEOS_PACKAGE_DIR)" || exit 1; \
+	fi
 
 internal-all::
 
@@ -29,10 +40,11 @@ after-all::
 before-clean::
 
 internal-clean::
-	$(ECHO_CLEANING)rm -rf "$(THEOS_OBJ_DIR)"$(ECHO_END)
+	$(ECHO_CLEANING)rm -rf "$(subst $(_THEOS_OBJ_DIR_EXTENSION),,$(THEOS_OBJ_DIR))"$(ECHO_END)
 
-ifeq ($(shell [ -f "$(_THEOS_BUILD_SESSION_FILE)" ] && echo 1),1)
+ifeq ($(shell [[ -f "$(_THEOS_BUILD_SESSION_FILE)" ]] && echo 1),1)
 	$(ECHO_NOTHING)rm "$(_THEOS_BUILD_SESSION_FILE)"$(ECHO_END)
+	$(ECHO_NOTHING)touch "$(_THEOS_BUILD_SESSION_FILE)"$(ECHO_END)
 endif
 
 ifeq ($(MAKELEVEL),0)
@@ -64,7 +76,7 @@ after-clean-packages::
 $(_THEOS_BUILD_SESSION_FILE):
 	@mkdir -p $(_THEOS_LOCAL_DATA_DIR)
 
-ifeq ($(shell [ -f "$(_THEOS_BUILD_SESSION_FILE)" ] || echo 0),0)
+ifeq ($(shell [[ -f "$(_THEOS_BUILD_SESSION_FILE)" ]] || echo 0),0)
 	@touch $(_THEOS_BUILD_SESSION_FILE)
 endif
 
@@ -77,11 +89,11 @@ endif
 %.variables:
 	@ \
 abs_build_dir=$(_THEOS_ABSOLUTE_BUILD_DIR); \
-if [ "$(__SUBPROJECTS)" != "" ]; then \
+if [[ "$(__SUBPROJECTS)" != "" ]]; then \
   $(PRINT_FORMAT_MAKING) "Making $(_OPERATION) in subprojects of $(_TYPE) $(_INSTANCE)"; \
   for d in $(__SUBPROJECTS); do \
     d="$${d%:*}"; \
-    if [ "$${abs_build_dir}" = "." ]; then \
+    if [[ "$${abs_build_dir}" = "." ]]; then \
       lbuilddir="."; \
     else \
       lbuilddir="$${abs_build_dir}/$$d"; \
@@ -109,11 +121,11 @@ $(MAKE) -f $(_THEOS_PROJECT_MAKEFILE_NAME) --no-print-directory --no-keep-going 
 %.subprojects:
 	@ \
 abs_build_dir=$(_THEOS_ABSOLUTE_BUILD_DIR); \
-if [ "$(__SUBPROJECTS)" != "" ]; then \
+if [[ "$(__SUBPROJECTS)" != "" ]]; then \
   $(PRINT_FORMAT_MAKING) "Making $(_OPERATION) in subprojects of $(_TYPE) $(_INSTANCE)"; \
   for d in $(__SUBPROJECTS); do \
     d="$${d%:*}"; \
-    if [ "$${abs_build_dir}" = "." ]; then \
+    if [[ "$${abs_build_dir}" = "." ]]; then \
       lbuilddir="."; \
     else \
       lbuilddir="$${abs_build_dir}/$$d"; \
@@ -128,23 +140,35 @@ if [ "$(__SUBPROJECTS)" != "" ]; then \
  fi
 
 update-theos::
-	@if [ ! -d "$(THEOS)/.git" ]; then \
-		$(PRINT_FORMAT_ERROR) "$(THEOS) is not a Git repository. For more information, refer to https://github.com/kirb/theos/wiki/Installation#updating." >&2; \
+	@if [[ ! -d "$(THEOS)/.git" ]]; then \
+		$(PRINT_FORMAT_ERROR) "$(THEOS) is not a Git repository. For more information, refer to https://github.com/theos/theos/wiki/Installation#updating." >&2; \
 		exit 1; \
 	fi
 
-	@cd $(THEOS) && git pull origin master && ./git-submodule-recur.sh init
+	$(ECHO_NOTHING)$(PRINT_FORMAT_MAKING) "Updating Theos"; \
+		cd $(THEOS) && \
+		$(THEOS_BIN_PATH)/update-git-repo$(ECHO_END)
+
+	$(ECHO_NOTHING)$(PRINT_FORMAT_MAKING) "Updating submodules"; \
+		cd $(THEOS) && \
+		git config submodule.fetchJobs 4 && \
+		git submodule init && \
+		git submodule foreach --recursive $(THEOS_BIN_PATH)/update-git-repo$(ECHO_END)
+
+	$(ECHO_NOTHING)$(PRINT_FORMAT_MAKING) "Running post-update configuration"; \
+		cd $(THEOS) && \
+		$(THEOS_BIN_PATH)/post-update$(ECHO_END)
 
 troubleshoot::
-	@$(PRINT_FORMAT) "Be sure to check the troubleshooting page at https://github.com/kirb/theos/wiki/Troubleshooting first."
-	@$(PRINT_FORMAT) "For support with build errors, ask on IRC: http://iphonedevwiki.net/index.php/IRC. If you think you've found a bug in Theos, check the issue tracker at https://github.com/kirb/theos/issues."
+	@$(PRINT_FORMAT) "Be sure to check the troubleshooting page at https://github.com/theos/theos/wiki/Troubleshooting first."
+	@$(PRINT_FORMAT) "For support with build errors, ask on IRC: http://iphonedevwiki.net/index.php/IRC. If you think you've found a bug in Theos, check the issue tracker at https://github.com/theos/theos/issues."
 	@echo
 
 ifeq ($(call __executable,ghost),$(_THEOS_TRUE))
 	@$(PRINT_FORMAT) "Creating a Ghostbin containing the output of \`make clean all messages=yes\`…"
-	$(MAKE) -f $(_THEOS_PROJECT_MAKEFILE_NAME) --no-print-directory --no-keep-going clean all messages=yes FORCE_COLOR=yes 2>&1 | ghost -x 336h - ansi
+	$(MAKE) -f $(_THEOS_PROJECT_MAKEFILE_NAME) --no-print-directory --no-keep-going clean all messages=yes FORCE_COLOR=yes 2>&1 | ghost -x 2w - ansi
 else
-	@$(PRINT_FORMAT_ERROR) "You don't have ghost installed. For more information, refer to https://github.com/kirb/theos/wiki/Installation#prerequisites."
+	@$(PRINT_FORMAT_ERROR) "You don't have ghost installed. For more information, refer to https://github.com/theos/theos/wiki/Installation#prerequisites." >&2; exit 1
 endif
 
 $(eval $(call __mod,master/rules.mk))

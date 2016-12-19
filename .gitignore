@@ -2,8 +2,8 @@
 .DS_Store
 ._*
 
-sdks/*.sdk
-toolchain
+sdks/*
+toolchain/*
 
 include/*
 lib/*

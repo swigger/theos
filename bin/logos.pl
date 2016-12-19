@@ -19,12 +19,11 @@ $Logos::Util::errorhandler = \&utilErrorHandler;
 
 use aliased 'Logos::Patch';
 use aliased 'Logos::Patch::Source::Generator' => 'Patch::Source::Generator';
-use aliased 'Logos::Patch';
 use aliased 'Logos::Group';
 use aliased 'Logos::Method';
 use aliased 'Logos::Class';
 use aliased 'Logos::Subclass';
-use aliased 'Logos::StaticClassGroup' ;
+use aliased 'Logos::StaticClassGroup';
 use aliased 'Logos::Property';
 use aliased 'Logos::Function';
 
@@ -381,68 +380,68 @@ foreach my $line (@lines) {
 			addPatch($patch);
 		} elsif($line =~ /\G%orig\b/gc) {
 			# %orig, with optional following parens.
-if (!defined $currentClass) {
-			fileError($lineno, "%orig does not make sense outside a function") if(!defined($currentFunction));
-			my $patchStart = $-[0];
+			if (!defined $currentClass) {
+				fileError($lineno, "%orig does not make sense outside a function") if(!defined($currentFunction));
+				my $patchStart = $-[0];
 
-			my $remaining = substr($line, pos($line));
-			my $orig_args = undef;
+				my $remaining = substr($line, pos($line));
+				my $orig_args = undef;
 
-			my ($popen, $pclose) = matchedParenthesisSet($remaining);
-			if(defined $popen) {
-				$orig_args = substr($remaining, $popen, $pclose-$popen-1);;
-				pos($line) = pos($line) + $pclose;
+				my ($popen, $pclose) = matchedParenthesisSet($remaining);
+				if(defined $popen) {
+					$orig_args = substr($remaining, $popen, $pclose-$popen-1);;
+					pos($line) = pos($line) + $pclose;
+				}
+
+				my $patch = Patch->new();
+				$patch->line($lineno);
+				$patch->range($patchStart, pos($line));
+				$patch->source(Patch::Source::Generator->new($currentFunction, 'originalFunctionCall', $orig_args));
+				addPatch($patch);
+			} else {
+				nestingMustContain($lineno, "%orig", \@nestingstack, "hook", "subclass");
+				fileError($lineno, "%orig does not make sense outside a method") if(!defined($currentMethod));
+				fileError($lineno, "%orig does not make sense outside a block") if($directiveDepth < 1);
+				fileWarning($lineno, "%orig in new method ".prettyPrintMethod($currentMethod)." will be non-operative.") if $currentMethod->isNew;
+
+				my $patchStart = $-[0];
+
+				my $remaining = substr($line, pos($line));
+				my $orig_args = undef;
+
+				my ($popen, $pclose) = matchedParenthesisSet($remaining);
+				if(defined $popen) {
+					$orig_args = substr($remaining, $popen, $pclose-$popen-1);;
+					pos($line) = pos($line) + $pclose;
+				}
+
+				my $capturedMethod = $currentMethod;
+				my $patch = Patch->new();
+				$patch->line($lineno);
+				$patch->range($patchStart, pos($line));
+				$patch->source(Patch::Source::Generator->new($capturedMethod, 'originalCall', $orig_args));
+				addPatch($patch);
 			}
-
-			my $patch = Patch->new();
-			$patch->line($lineno);
-			$patch->range($patchStart, pos($line));
-			$patch->source(Patch::Source::Generator->new($currentFunction, 'originalFunctionCall', $orig_args));
-			addPatch($patch);
-} else {
-			nestingMustContain($lineno, "%orig", \@nestingstack, "hook", "subclass");
-			fileError($lineno, "%orig does not make sense outside a method") if(!defined($currentMethod));
-			fileError($lineno, "%orig does not make sense outside a block") if($directiveDepth < 1);
-			fileWarning($lineno, "%orig in new method ".prettyPrintMethod($currentMethod)." will be non-operative.") if $currentMethod->isNew;
-
-			my $patchStart = $-[0];
-
-			my $remaining = substr($line, pos($line));
-			my $orig_args = undef;
-
-			my ($popen, $pclose) = matchedParenthesisSet($remaining);
-			if(defined $popen) {
-				$orig_args = substr($remaining, $popen, $pclose-$popen-1);;
-				pos($line) = pos($line) + $pclose;
-			}
-
-			my $capturedMethod = $currentMethod;
-			my $patch = Patch->new();
-			$patch->line($lineno);
-			$patch->range($patchStart, pos($line));
-			$patch->source(Patch::Source::Generator->new($capturedMethod, 'originalCall', $orig_args));
-			addPatch($patch);
-}
 		} elsif($line =~ /\G&\s*%orig\b/gc) {
 			# &%orig, at a word boundary
-if (!defined $currentClass) {
-			fileError($lineno, "%orig does not make sense outside a function") if(!defined($currentFunction));
-			my $patchStart = $-[0];
-			my $patchEnd = $patchStart + 6;
-			my $patch = Patch->new();
-			$patch->line($lineno);
-			$patch->range($patchStart, $patchEnd);
-			$patch->source(Patch::Source::Generator->new($currentFunction, 'originalFunctionName'));
-			addPatch($patch);
-} else {
-			nestingMustContain($lineno, "%orig", \@nestingstack, "hook", "subclass");
-			fileError($lineno, "%orig does not make sense outside a method") if(!defined($currentMethod));
-			fileError($lineno, "%orig does not make sense outside a block") if($directiveDepth < 1);
-			fileError($lineno, "no original method pointer for &%orig in new method ".prettyPrintMethod($currentMethod).".") if $currentMethod->isNew;
+			if (!defined $currentClass) {
+				fileError($lineno, "%orig does not make sense outside a function") if(!defined($currentFunction));
+				my $patchStart = $-[0];
+				my $patchEnd = $patchStart + 6;
+				my $patch = Patch->new();
+				$patch->line($lineno);
+				$patch->range($patchStart, $patchEnd);
+				$patch->source(Patch::Source::Generator->new($currentFunction, 'originalFunctionName'));
+				addPatch($patch);
+			} else {
+				nestingMustContain($lineno, "%orig", \@nestingstack, "hook", "subclass");
+				fileError($lineno, "%orig does not make sense outside a method") if(!defined($currentMethod));
+				fileError($lineno, "%orig does not make sense outside a block") if($directiveDepth < 1);
+				fileError($lineno, "no original method pointer for &%orig in new method ".prettyPrintMethod($currentMethod).".") if $currentMethod->isNew;
 
-			my $capturedMethod = $currentMethod;
-			patchHere(Patch::Source::Generator->new($capturedMethod, 'originalFunctionName'));
-}
+				my $capturedMethod = $currentMethod;
+				patchHere(Patch::Source::Generator->new($capturedMethod, 'originalFunctionName'));
+			}
 		} elsif($line =~ /\G%log\b/gc) {
 			# %log
 			nestingMustContain($lineno, "%log", \@nestingstack, "hook", "subclass");
@@ -566,6 +565,8 @@ if (!defined $currentClass) {
 			patchHere(undef);
 		} elsif($line =~ /\G%property\s*(?:\((\s*\w+\s*(?:,\s*(?:\w|\=|:)+\s*)*)\))?\s*((?:\w+\s+\**)+)(\w+)\s*;/gc){
 			nestingMustContain($lineno, "%property", \@nestingstack, "hook", "subclass");
+
+			$currentClass->hasinstancehooks(1);
 
 			# check property attribute validity
 			my @attributes = split/\(?\s*,\s*\)?/, $1;
@@ -719,6 +720,7 @@ if(@firstDirectivePosition) {
 	$patch->line($line);
 	my @patchsource = ();
 	push(@patchsource, Patch::Source::Generator->new(undef, 'preamble')) if !$hasGeneratorPreamble;
+	push(@patchsource, Patch::Source::Generator->new(undef, 'staticDeclarations'));
 	push(@patchsource, Patch::Source::Generator->new(undef, 'generateClassList', keys %classes));
 	push(@patchsource, Patch::Source::Generator->new($groups[0], 'declarations'));
 	push(@patchsource, Patch::Source::Generator->new($staticClassGroup, 'declarations'));

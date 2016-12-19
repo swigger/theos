@@ -16,7 +16,7 @@ _IOS_SDKS := $(sort $(patsubst $(_SDK_DIR)/WatchOS%.sdk,%,$(wildcard $(_SDK_DIR)
 
 ifeq ($(words $(_IOS_SDKS)),0)
 before-all::
-	@$(PRINT_FORMAT_ERROR) "You do not have an SDK in $(_SDK_DIR)." >&2
+	@$(PRINT_FORMAT_ERROR) "You do not have an SDK in $(_SDK_DIR)." >&2; exit 1
 endif
 _LATEST_SDK := $(lastword $(_IOS_SDKS))
 
@@ -78,7 +78,6 @@ _THEOS_TARGET_SWIFT_VERSION = $(shell $(TARGET_SWIFT) --version | head -1 | cut 
 _THEOS_TARGET_IBFLAGS = --auto-activate-custom-fonts --minimum-deployment-target $(_THEOS_TARGET_SDK_VERSION) $(IBMODULESFLAGS)
 
 _THEOS_TARGET_DEFAULT_PACKAGE_FORMAT := deb
-PREINSTALL_TARGET_PROCESSES ?= Cydia
 
 TARGET_INSTALL_REMOTE := $(_THEOS_TRUE)
 endif

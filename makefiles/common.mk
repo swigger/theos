@@ -18,7 +18,7 @@ __clean_pwd = $(shell (unset CDPATH; cd "$(1)"; pwd))
 # Truthiness
 _THEOS_TRUE := 1
 _THEOS_FALSE :=
-__theos_bool = $(if $(filter Y y YES yes 1,$(1)),$(_THEOS_TRUE),$(_THEOS_FALSE))
+__theos_bool = $(if $(filter Y y YES yes TRUE true 1,$(1)),$(_THEOS_TRUE),$(_THEOS_FALSE))
 # Existence
 __exists = $(if $(wildcard $(1)),$(_THEOS_TRUE),$(_THEOS_FALSE))
 __executable = $(if $(shell PATH="$(THEOS_BIN_PATH):$$PATH" type "$(1)" > /dev/null 2>&1 && echo 1),$(_THEOS_TRUE),$(_THEOS_FALSE))
@@ -91,8 +91,10 @@ __schema_var_all = $(strip $(foreach sch,$(call __schema_all_var_names,$(1),$(2)
 __schema_var_name_last = $(strip $(lastword $(call __schema_defined_var_names,$(1),$(2))))
 __schema_var_last = $(strip $($(lastword $(call __schema_defined_var_names,$(1),$(2)))))
 
+THEOS_LAYOUT_DIR_NAME ?= layout
+THEOS_LAYOUT_DIR ?= $(THEOS_PROJECT_DIR)/$(THEOS_LAYOUT_DIR_NAME)
 ifeq ($(_THEOS_HAS_STAGING_LAYOUT),)
-_THEOS_HAS_STAGING_LAYOUT := $(call __exists,$(THEOS_PROJECT_DIR)/layout)
+_THEOS_HAS_STAGING_LAYOUT := $(call __exists,$(THEOS_LAYOUT_DIR))
 endif
 
 _THEOS_LOAD_MODULES := $(sort $(call __schema_var_all,,MODULES) $(THEOS_AUTOLOAD_MODULES))
@@ -127,8 +129,10 @@ export _THEOS_PLATFORM_CALCULATED := 1
 endif
 
 -include $(THEOS_MAKE_PATH)/platform/$(_THEOS_PLATFORM_ARCH).mk
+-include $(THEOS_MAKE_PATH)/platform/$(_THEOS_PLATFORM).mk
 -include $(THEOS_MAKE_PATH)/platform/$(_THEOS_OS).mk
 $(eval $(call __mod,platform/$(_THEOS_PLATFORM_ARCH).mk))
+$(eval $(call __mod,platform/$(_THEOS_PLATFORM).mk))
 $(eval $(call __mod,platform/$(_THEOS_OS).mk))
 
 ifneq ($(_THEOS_TARGET_CALCULATED),1)
@@ -165,7 +169,7 @@ _THEOS_TARGET_HAS_INCLUDE_PATH := $(call __exists,$(THEOS_TARGET_INCLUDE_PATH))
 _THEOS_TARGET_HAS_LIBRARY_PATH := $(call __exists,$(THEOS_TARGET_LIBRARY_PATH))
 
 # Package Format requires Target default and falls back to `none'.
-_THEOS_PACKAGE_FORMAT := $(or $(call __schema_var_last,,PACKAGE_FORMAT),$(_THEOS_TARGET_DEFAULT_PACKAGE_FORMAT),none)
+_THEOS_PACKAGE_FORMAT := $(or $(call __schema_var_last,,$(_THEOS_TARGET_NAME_DEFINE)_PACKAGE_FORMAT),$(call __schema_var_last,,PACKAGE_FORMAT),$(_THEOS_TARGET_DEFAULT_PACKAGE_FORMAT),none)
 _THEOS_PACKAGE_LAST_FILENAME = $(call __simplify,_THEOS_PACKAGE_LAST_FILENAME,$(shell cat "$(_THEOS_LOCAL_DATA_DIR)/last_package" 2>/dev/null))
 
 # ObjC/++ stuff is not here, it's in instance/rules.mk and only added if there are OBJC/OBJCC objects.
@@ -176,18 +180,20 @@ DEBUG.CFLAGS = -DDEBUG $(DEBUGFLAG) -O0
 DEBUG.SWIFTFLAGS = -DDEBUG -Onone
 DEBUG.LDFLAGS = $(DEBUGFLAG) -O0
 
-ifeq ($(findstring DEBUG,$(THEOS_SCHEMA)),)
-SHOULD_STRIP := $(call __theos_bool,$(or $(strip),$(STRIP),1))
-else
-SHOULD_STRIP := $(_THEOS_FALSE)
-TARGET_STRIP = :
+_THEOS_SHOULD_STRIP_DEFAULT := $(_THEOS_TRUE)
+
+ifneq ($(findstring DEBUG,$(THEOS_SCHEMA)),)
+_THEOS_SHOULD_STRIP_DEFAULT := $(_THEOS_FALSE)
 PACKAGE_BUILDNAME ?= debug
 endif
+
+SHOULD_STRIP := $(call __theos_bool,$(or $(strip),$(STRIP),$(_THEOS_SHOULD_STRIP_DEFAULT)))
 
 ifeq ($(SHOULD_STRIP),$(_THEOS_TRUE))
 OPTFLAG ?= -Os
 SWIFT_OPTFLAG ?= -O
 else
+TARGET_STRIP = :
 OPTFLAG ?= -O0
 endif
 
@@ -222,13 +228,14 @@ THEOS_OBJ_DIR = $(_THEOS_LOCAL_DATA_DIR)/$(THEOS_OBJ_DIR_NAME)/$(THEOS_CURRENT_A
 endif
 
 THEOS_STAGING_DIR_NAME ?= _
-THEOS_STAGING_DIR = $(_THEOS_LOCAL_DATA_DIR)/$(THEOS_STAGING_DIR_NAME)
+THEOS_STAGING_DIR ?= $(_THEOS_LOCAL_DATA_DIR)/$(THEOS_STAGING_DIR_NAME)
 _SPACE :=
 _SPACE +=
 _THEOS_ESCAPED_STAGING_DIR = $(subst $(_SPACE),\ ,$(THEOS_STAGING_DIR))
 
-THEOS_PACKAGE_DIR_NAME ?= debs
-THEOS_PACKAGE_DIR = $(THEOS_BUILD_DIR)/$(THEOS_PACKAGE_DIR_NAME)
+THEOS_PACKAGE_DIR_NAME ?= packages
+THEOS_PACKAGE_DIR ?= $(THEOS_BUILD_DIR)/$(THEOS_PACKAGE_DIR_NAME)
+THEOS_LEGACY_PACKAGE_DIR = $(THEOS_BUILD_DIR)/debs
 
 # $(warning ...) expands to the empty string, so the contents of THEOS_STAGING_DIR are not damaged in this copy.
 FW_PACKAGE_STAGING_DIR = $(THEOS_STAGING_DIR)$(warning FW_PACKAGE_STAGING_DIR is deprecated; please use THEOS_STAGING_DIR)

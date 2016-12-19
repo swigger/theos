@@ -20,7 +20,7 @@ _SDK_DIR := $(THEOS)/sdks
 _IOS_SDKS := $(sort $(patsubst $(_SDK_DIR)/iPhoneOS%.sdk,%,$(wildcard $(_SDK_DIR)/iPhoneOS*.sdk)))
 ifeq ($(words $(_IOS_SDKS)),0)
 before-all::
-	@$(PRINT_FORMAT_ERROR) "You do not have an SDK in $(_SDK_DIR)." >&2
+	@$(PRINT_FORMAT_ERROR) "You do not have an SDK in $(_SDK_DIR)." >&2; exit 1
 endif
 _LATEST_SDK := $(lastword $(_IOS_SDKS))
 
@@ -133,9 +133,12 @@ _THEOS_TARGET_CFLAGS := -isysroot "$(ISYSROOT)" $(SDKFLAGS) $(VERSIONFLAGS) $(_T
 _THEOS_TARGET_LDFLAGS := -isysroot "$(SYSROOT)" $(SDKFLAGS) $(VERSIONFLAGS) $(LEGACYFLAGS) -multiply_defined suppress
 
 TARGET_INSTALL_REMOTE := $(_THEOS_FALSE)
+<<<<<<< HEAD
 ifeq ($(THEOS_INSTALL_USING_SSH),1)
+=======
+ifeq ($(call __theos_bool,$(THEOS_INSTALL_USING_SSH)),$(_THEOS_TRUE))
+>>>>>>> a6167f8aabc3cede990f6fbbd79f6acbebc9f098
 	TARGET_INSTALL_REMOTE := $(_THEOS_TRUE)
 endif
 _THEOS_TARGET_DEFAULT_PACKAGE_FORMAT := deb
-PREINSTALL_TARGET_PROCESSES ?= Cydia
 endif

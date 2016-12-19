@@ -3,7 +3,7 @@ _THEOS_TARGET_LOADED := 1
 THEOS_TARGET_NAME := iphone
 
 SDKTARGET ?= arm-apple-darwin
-SDKBINPATH ?= /opt/ios_tools/bin
+SDKBINPATH ?= $(THEOS)/toolchain/$(THEOS_PLATFORM_NAME)/$(THEOS_TARGET_NAME)/bin
 
 _THEOS_TARGET_CC := clang
 _THEOS_TARGET_CXX := clang++
@@ -23,7 +23,7 @@ _SDK_DIR := $(THEOS)/sdks
 _IOS_SDKS := $(sort $(patsubst $(_SDK_DIR)/iPhoneOS%.sdk,%,$(wildcard $(_SDK_DIR)/iPhoneOS*.sdk)))
 ifeq ($(words $(_IOS_SDKS)),0)
 before-all::
-	@$(PRINT_FORMAT_ERROR) "You do not have an SDK in $(_SDK_DIR)." >&2
+	@$(PRINT_FORMAT_ERROR) "You do not have an SDK in $(_SDK_DIR)." >&2; exit 1
 endif
 _LATEST_SDK := $(lastword $(_IOS_SDKS))
 
@@ -53,7 +53,6 @@ endif
 endif
 
 _THEOS_TARGET_IPHONEOS_DEPLOYMENT_VERSION := $(or $(__THEOS_TARGET_ARG_$(word 2,$(_THEOS_TARGET_ARG_ORDER))),$(TARGET_IPHONEOS_DEPLOYMENT_VERSION_$(THEOS_CURRENT_ARCH)),$(TARGET_IPHONEOS_DEPLOYMENT_VERSION),$(_SDKVERSION),$(_THEOS_TARGET_DEFAULT_IPHONEOS_DEPLOYMENT_VERSION))
-_THEOS_TARGET_IPHONEOS_DEPLOYMENT_VERSION := 6.0
 
 ifeq ($(_THEOS_TARGET_IPHONEOS_DEPLOYMENT_VERSION),latest)
 override _THEOS_TARGET_IPHONEOS_DEPLOYMENT_VERSION := $(_LATEST_SDK)
