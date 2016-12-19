@@ -133,11 +133,7 @@ _THEOS_TARGET_CFLAGS := -isysroot "$(ISYSROOT)" $(SDKFLAGS) $(VERSIONFLAGS) $(_T
 _THEOS_TARGET_LDFLAGS := -isysroot "$(SYSROOT)" $(SDKFLAGS) $(VERSIONFLAGS) $(LEGACYFLAGS) -multiply_defined suppress
 
 TARGET_INSTALL_REMOTE := $(_THEOS_FALSE)
-<<<<<<< HEAD
-ifeq ($(THEOS_INSTALL_USING_SSH),1)
-=======
 ifeq ($(call __theos_bool,$(THEOS_INSTALL_USING_SSH)),$(_THEOS_TRUE))
->>>>>>> a6167f8aabc3cede990f6fbbd79f6acbebc9f098
 	TARGET_INSTALL_REMOTE := $(_THEOS_TRUE)
 endif
 _THEOS_TARGET_DEFAULT_PACKAGE_FORMAT := deb

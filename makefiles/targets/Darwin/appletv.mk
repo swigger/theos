@@ -78,9 +78,5 @@ _THEOS_TARGET_SWIFT_VERSION = $(shell $(TARGET_SWIFT) --version | head -1 | cut 
 _THEOS_TARGET_IBFLAGS = --auto-activate-custom-fonts --minimum-deployment-target $(_THEOS_TARGET_SDK_VERSION) $(IBMODULESFLAGS)
 
 _THEOS_TARGET_DEFAULT_PACKAGE_FORMAT := deb
-<<<<<<< HEAD
-PREINSTALL_TARGET_PROCESSES ?= Cydia
-=======
->>>>>>> a6167f8aabc3cede990f6fbbd79f6acbebc9f098
 TARGET_INSTALL_REMOTE := $(_THEOS_TRUE)
 endif
