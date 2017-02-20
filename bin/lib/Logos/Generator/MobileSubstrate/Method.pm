@@ -34,7 +34,7 @@ sub _methodPrototype {
 		$arglist = ", ".$typelist if $typelist;
 	}
 
-	my $name = $self->newFunctionName($method)."(".$classargtype.($includeArgNames?" self":"").", SEL".($includeArgNames?" _cmd":"").$arglist.")";
+	my $name = $self->newFunctionName($method)."(".$classargtype.($includeArgNames?" __unused self":"").", SEL".($includeArgNames?" __unused _cmd":"").$arglist.")";
 	$build .= Logos::Method::declarationForTypeWithName($self->returnTypeForMethod($method), $name);
 	$build .= $self->functionAttributesForMethod($method);
 	return $build;
@@ -80,12 +80,7 @@ sub initializers {
 	my $cgen = Logos::Generator::for($method->class);
 	my $classvar = ($method->scope eq "+" ? $cgen->metaVariable : $cgen->variable);
 	if(!$method->isNew) {
-		my $r = "";
-		$r .= "if (".$classvar.") {";
-		$r .=   "MSHookMessageEx(".$classvar.", ".$self->selectorRef($method->selector).", (IMP)&".$self->newFunctionName($method).", (IMP*)&".$self->originalFunctionName($method).");";
-		$r .= "} else {";
-		$r .=   "HBLogError(@\"logos: nil class %s\", \"".$method->class->name."\");";
-		$r .= "}";
+		my $r = "MSHookMessageEx(".$classvar.", ".$self->selectorRef($method->selector).", (IMP)&".$self->newFunctionName($method).", (IMP*)&".$self->originalFunctionName($method).");";
 	} else {
 		my $r = "";
 		$r .= "{ ";
